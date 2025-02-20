@@ -54,22 +54,25 @@ async function authenticateUser() {
     }
 }
 
-// Retrieve User Info
-async function getUser() {
-    const { data: user } = await supabase.auth.getUser();
-    if (user) {
-        document.getElementById("user-info").innerText = "Logged in as: " + user.email;
-    } else {
-        alert("No user logged in.");
+// Check if user is logged in & load username
+async function loadUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+        // Redirect to login if not authenticated
+        window.location.href = "auth.html";
+        return;
     }
+
+    // Display user email as username
+    document.getElementById("username").innerText = user.email;
 }
 
 // Logout Function
 async function logout() {
     await supabase.auth.signOut();
-    alert("You have logged out.");
+    window.location.href = "auth.html"; // Redirect to login page
 }
-
 
 
 
