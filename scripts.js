@@ -56,17 +56,21 @@ async function authenticateUser() {
 
 // Check if user is logged in & load username
 async function loadUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
+    const { data, error } = await supabase.auth.getUser();
+
+    console.log("User data response:", data); // Debugging
+    console.log("Error:", error); // Debugging
+
+    if (!data || !data.user) {
         // Redirect to login if not authenticated
         window.location.href = "auth.html";
         return;
     }
 
     // Display user email as username
-    document.getElementById("username").innerText = user.email;
+    document.getElementById("username").innerText = data.user.email;
 }
+
 
 // Logout Function
 async function logout() {
