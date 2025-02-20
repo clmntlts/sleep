@@ -1,82 +1,88 @@
-// Initialize Supabase without import
-const { createClient } = window.supabase;
-// Supabase credentials (replace with your actual keys)
+// Initialize Supabase
 const SUPABASE_URL = "https://wvdggsrxtjdlfezenbbz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGdnc3J4dGpkbGZlemVuYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNDc5NDcsImV4cCI6MjA1NTYyMzk0N30.4hJtANpuD5xx_J0Ukk6QoqTcnbV0gkjMeD2HcP5QxB8";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Unified Login/Signup Function
 async function authenticateUser() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    // Try to log in
-    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+        // Attempt to log in
+        let { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-            // If login fails, attempt to sign up the user
-            console.log("User not found. Attempting sign-up...");
+        if (error) {
+            if (error.message.includes("Invalid login credentials")) {
+                console.log("User not found. Attempting sign-up...");
 
-            const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
+                // Try to sign up the user
+                const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
 
-            if (signupError) {
-                alert("Sign-up failed: " + signupError.message);
-                return;
-            }
+                if (signupError) {
+                    alert("Sign-up failed: " + signupError.message);
+                    return;
+                }
 
-            // Get new user data
-            const user = signupData.user;
-            if (!user) {
-                alert("Error retrieving user data.");
-                return;
-            }
+                const user = signupData.user;
+                if (!user) {
+                    alert("Error retrieving user data.");
+                    return;
+                }
 
-            // Insert new user into the "users" table
-            const { error: dbError } = await supabase.from("users").insert([
-                { id: user.id, email: email }
-            ]);
+                // Insert user into the database
+                const { error: dbError } = await supabase.from("users").insert([{ id: user.id, email: email }]);
 
-            if (dbError) {
-                alert("Error saving user to database: " + dbError.message);
+                if (dbError) {
+                    alert("Error saving user to database: " + dbError.message);
+                    return;
+                }
+
+                alert("Sign-up successful! Redirecting...");
+                window.location.href = "index.html"; // Redirect after successful signup
             } else {
-                alert("Sign-up successful! User saved to database.");
-                // Redirect to index.html
-                window.location.href = "index.html";
+                alert("Login failed: " + error.message);
+                return;
             }
-
         } else {
-            alert("Login failed: " + error.message);
+            alert("Login successful! Redirecting...");
+            window.location.href = "index.html"; // Redirect after successful login
         }
-    } else {
-        alert("Login successful!");
-        // Redirect to index.html
-        window.location.href = "index.html";
+    } catch (err) {
+        console.error("Authentication error:", err);
+        alert("An error occurred. Please try again.");
     }
 }
 
-// Check if user is logged in & load username
+// Check if user is logged in & display username
 async function loadUser() {
-    const { data, error } = await supabase.auth.getUser();
+    try {
+        const { data, error } = await supabase.auth.getUser();
 
-    console.log("User data response:", data); // Debugging
-    console.log("Error:", error); // Debugging
+        console.log("User Data Response:", data); // Debugging
 
-    if (!data || !data.user) {
-        // Redirect to login if not authenticated
-        window.location.href = "auth.html";
-        return;
+        if (!data || !data.user) {
+            window.location.href = "auth.html"; // Redirect if not authenticated
+            return;
+        }
+
+        // Display username (email)
+        document.getElementById("username").innerText = data.user.email;
+    } catch (err) {
+        console.error("Error loading user:", err);
+        window.location.href = "auth.html"; // Ensure user is redirected if there's an error
     }
-
-    // Display user email as username
-    document.getElementById("username").innerText = data.user.email;
 }
-
 
 // Logout Function
 async function logout() {
     await supabase.auth.signOut();
     window.location.href = "auth.html"; // Redirect to login page
 }
+
+// Ensure loadUser runs after DOM is fully loaded
+document.addEventListener("DOMContentLoaded", loadUser);
 
 
 
