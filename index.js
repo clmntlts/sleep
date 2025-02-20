@@ -12,48 +12,71 @@ async function loadUser() {
     try {
         const { data, error } = await supabase.auth.getUser();
 
-        console.log("User Data Response:", data);
-
         if (!data || !data.user) {
-            window.location.href = "auth.html";
-            return;
+            window.location.href = "auth.html"; // Redirect if no user
+            return null;
         }
 
+        const user_id = data.user.id; // Retrieve user ID
         document.getElementById("username").innerText = data.user.email;
+
+        console.log("User ID:", user_id);
+        return user_id; // Return user ID for further use
     } catch (err) {
         console.error("Error loading user:", err);
         window.location.href = "auth.html";
+        return null;
     }
 }
 
-async function logout() {
-    await supabase.auth.signOut();
-    window.location.href = "auth.html";
+async function loadUserData() {
+    const user_id = await loadUser(); // Ensure user is loaded first
+    if (!user_id) return; // Stop if no user
+
+    console.log("Fetching data for user:", user_id);
+    
+    // Fetch and populate sleep records
+    await loadUserSleepRecords(user_id);
 }
 
-async function addSleepRecord(user_id, day_id, bedtime, wake_time, total_sleep, sleep_quality, morning_fatigue) {
-  const { data, error } = await supabase
-    .from('sleep_record')  // Specify the table name
-    .insert([
-      {
-        user_id: user_id,
-        day_id: day_id,
-        bedtime: bedtime,
-        wake_time: wake_time,
-        total_sleep: total_sleep,
-        sleep_quality: sleep_quality,
-        morning_fatigue: morning_fatigue,
-        created_at: new Date().toISOString(),  // Current timestamp
-        updated_at: new Date().toISOString()   // Current timestamp
-      }
-    ]);
+async function loadUserSleepRecords(user_id) {
+    const { data, error } = await supabase
+        .from('sleep_record')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('night_number', { ascending: true });
 
-  if (error) {
-    console.error('Error inserting record:', error);
-  } else {
-    console.log('Record added successfully:', data);
-  }
+    if (error) {
+        console.error("Error fetching sleep records:", error);
+        return;
+    }
+
+    if (data.length === 0) {
+        // If no records exist, start with an empty day
+        addDay();
+        console.log("New user detected, starting with an empty day.");
+    } else {
+        // Populate existing sleep records
+        data.forEach(record => {
+            addDay(); // Creates a new day in the UI
+
+            // Update UI elements for the new day
+            document.getElementById(`bedtime${dayCount}`).style.left = `${record.bedtime_position}px`;
+            document.getElementById(`wakeTime${dayCount}`).style.left = `${record.waketime_position}px`;
+            document.getElementById(`timeInBed${dayCount}`).innerText = record.time_in_bed;
+            document.getElementById(`totalSleep${dayCount}`).innerText = record.total_sleep_time;
+            document.getElementById(`sleepQuality${dayCount}`).value = record.sleep_quality;
+            document.getElementById(`sleepQualityLabel${dayCount}`).innerText = record.sleep_quality;
+            document.getElementById(`morningFatigue${dayCount}`).value = record.morning_fatigue;
+            document.getElementById(`morningFatigueLabel${dayCount}`).innerText = record.morning_fatigue;
+        });
+    }
 }
+
+// Ensure data is loaded when the page loads
+window.onload = async () => {
+    await loadUserData();
+};
 
 let dayCount = 0;
 
