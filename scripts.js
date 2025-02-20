@@ -84,6 +84,29 @@ async function logout() {
     window.location.href = "auth.html";
 }
 
+async function addSleepRecord(user_id, day_id, bedtime, wake_time, total_sleep, sleep_quality, morning_fatigue) {
+  const { data, error } = await supabase
+    .from('sleep_record')  // Specify the table name
+    .insert([
+      {
+        user_id: user_id,
+        day_id: day_id,
+        bedtime: bedtime,
+        wake_time: wake_time,
+        total_sleep: total_sleep,
+        sleep_quality: sleep_quality,
+        morning_fatigue: morning_fatigue,
+        created_at: new Date().toISOString(),  // Current timestamp
+        updated_at: new Date().toISOString()   // Current timestamp
+      }
+    ]);
+
+  if (error) {
+    console.error('Error inserting record:', error);
+  } else {
+    console.log('Record added successfully:', data);
+  }
+}
 
 let dayCount = 0;
 
