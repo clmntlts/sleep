@@ -8,6 +8,12 @@
 </head>
 <body>
     <div class="container">
+        <!-- User Info & Logout -->
+        <div class="user-info">
+            <h2>Welcome, <span id="username">Loading...</span></h2>
+            <button onclick="logout()">Logout</button>
+        </div>
+
         <h1>Sleep Diary</h1>
         <div class="statistics">
             <h3>Statistics</h3>
@@ -20,6 +26,7 @@
         <button onclick="addDay()">Add Day</button>
         <div id="diary"></div>
     </div>
+
     <script src="scripts.js"></script>
 </body>
-</html>
+
