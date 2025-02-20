@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Diary</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sleep Diary</h1>
+        <div class="statistics">
+            <h3>Statistics</h3>
+            <p>Time in Bed: <span id="avgTIB">0</span> hours</p>
+            <p>Sleep Time: <span id="avgSleep">0</span> hours</p>
+            <p>Sleep Efficiency: <span id="sleepEfficiency">0</span>%</p>
+            <p>Sleep Quality: <span id="avgSleepQuality">5</span></p>
+            <p>Morning Fatigue: <span id="avgMorningFatigue">5</span></p>
+        </div>
+        <button onclick="addDay()">Add Day</button>
+        <div id="diary"></div>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
