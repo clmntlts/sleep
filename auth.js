@@ -36,6 +36,7 @@ async function authenticateUser() {
                     return;
                 }
 
+                // Insert user into the users table on sign-up
                 const { error: dbError } = await supabase.from("users").insert([
                     { id: user.id, email: email },
                 ]);
@@ -52,6 +53,31 @@ async function authenticateUser() {
                 return;
             }
         } else {
+            // Check if user exists in the 'users' table
+            const { data: userData, error: fetchError } = await supabase
+                .from("users")
+                .select("*")
+                .eq("id", data.user.id)
+                .single();
+
+            if (fetchError) {
+                console.error("Error fetching user from users table:", fetchError);
+                alert("An error occurred while fetching user data.");
+                return;
+            }
+
+            // If the user doesn't exist, insert them into the 'users' table
+            if (!userData) {
+                const { error: insertError } = await supabase.from("users").insert([
+                    { id: data.user.id, email: data.user.email },
+                ]);
+
+                if (insertError) {
+                    alert("Error inserting user into database: " + insertError.message);
+                    return;
+                }
+            }
+
             alert("Login successful! Redirecting...");
             window.location.href = "index.html";
         }
