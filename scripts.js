@@ -1,89 +1,88 @@
 // Ensure Supabase is loaded before using it
-document.addEventListener("DOMContentLoaded", async () => {
-    const SUPABASE_URL = "https://wvdggsrxtjdlfezenbbz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGdnc3J4dGpkbGZlemVuYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNDc5NDcsImV4cCI6MjA1NTYyMzk0N30.4hJtANpuD5xx_J0Ukk6QoqTcnbV0gkjMeD2HcP5QxB8";
+const { createClient } = window.supabase;
 
-    // Correctly initialize Supabase
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = "https://wvdggsrxtjdlfezenbbz.supabase.co";
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGdnc3J4dGpkbGZlemVuYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNDc5NDcsImV4cCI6MjA1NTYyMzk0N30.4hJtANpuD5xx_J0Ukk6QoqTcnbV0gkjMeD2HcP5QxB8";
 
-    async function authenticateUser() {
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+// Correctly initialize Supabase
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        try {
-            let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+async function authenticateUser() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-            if (error) {
-                if (error.message.includes("Invalid login credentials")) {
-                    console.log("User not found. Attempting sign-up...");
+    try {
+        let { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
 
-                    const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
+        if (error) {
+            if (error.message.includes("Invalid login credentials")) {
+                console.log("User not found. Attempting sign-up...");
 
-                    if (signupError) {
-                        alert("Sign-up failed: " + signupError.message);
-                        return;
-                    }
+                const { data: signupData, error: signupError } =
+                    await supabase.auth.signUp({ email, password });
 
-                    const user = signupData.user;
-                    if (!user) {
-                        alert("Error retrieving user data.");
-                        return;
-                    }
-
-                    const { error: dbError } = await supabase.from("users").insert([{ id: user.id, email: email }]);
-
-                    if (dbError) {
-                        alert("Error saving user to database: " + dbError.message);
-                        return;
-                    }
-
-                    alert("Sign-up successful! Redirecting...");
-                    window.location.href = "index.html";
-                } else {
-                    alert("Login failed: " + error.message);
+                if (signupError) {
+                    alert("Sign-up failed: " + signupError.message);
                     return;
                 }
-            } else {
-                alert("Login successful! Redirecting...");
+
+                const user = signupData.user;
+                if (!user) {
+                    alert("Error retrieving user data.");
+                    return;
+                }
+
+                const { error: dbError } = await supabase.from("users").insert([
+                    { id: user.id, email: email },
+                ]);
+
+                if (dbError) {
+                    alert("Error saving user to database: " + dbError.message);
+                    return;
+                }
+
+                alert("Sign-up successful! Redirecting...");
                 window.location.href = "index.html";
-            }
-        } catch (err) {
-            console.error("Authentication error:", err);
-            alert("An error occurred. Please try again.");
-        }
-    }
-
-    async function loadUser() {
-        try {
-            const { data, error } = await supabase.auth.getUser();
-
-            console.log("User Data Response:", data);
-
-            if (!data || !data.user) {
-                window.location.href = "auth.html";
+            } else {
+                alert("Login failed: " + error.message);
                 return;
             }
-
-            document.getElementById("username").innerText = data.user.email;
-        } catch (err) {
-            console.error("Error loading user:", err);
-            window.location.href = "auth.html";
+        } else {
+            alert("Login successful! Redirecting...");
+            window.location.href = "index.html";
         }
+    } catch (err) {
+        console.error("Authentication error:", err);
+        alert("An error occurred. Please try again.");
     }
+}
 
-    async function logout() {
-        await supabase.auth.signOut();
+async function loadUser() {
+    try {
+        const { data, error } = await supabase.auth.getUser();
+
+        console.log("User Data Response:", data);
+
+        if (!data || !data.user) {
+            window.location.href = "auth.html";
+            return;
+        }
+
+        document.getElementById("username").innerText = data.user.email;
+    } catch (err) {
+        console.error("Error loading user:", err);
         window.location.href = "auth.html";
     }
+}
 
-    // Expose functions globally
-    window.authenticateUser = authenticateUser;
-    window.loadUser = loadUser;
-    window.logout = logout;
-
-    // Load user on page load
-    loadUser();
-});
+async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "auth.html";
+}
 
 
 let dayCount = 0;
