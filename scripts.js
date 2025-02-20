@@ -5,52 +5,52 @@ const SUPABASE_URL = "https://wvdggsrxtjdlfezenbbz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGdnc3J4dGpkbGZlemVuYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNDc5NDcsImV4cCI6MjA1NTYyMzk0N30.4hJtANpuD5xx_J0Ukk6QoqTcnbV0gkjMeD2HcP5QxB8";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function signUp() {
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
+async function authenticateUser() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-    // Sign up the user in Supabase Auth
-    const { data, error } = await supabase.auth.signUp({ email, password });
-
-    if (error) {
-        alert("Signup Error: " + error.message);
-        return;
-    }
-
-    // Get the newly created user ID
-    const user = data.user;
-    if (!user) {
-        alert("Error retrieving user data.");
-        return;
-    }
-
-    // Insert user info into the "users" table
-    const { error: dbError } = await supabase.from("users").insert([
-        {
-            id: user.id,  // Use Supabase Auth user ID
-            email: email,
-        },
-    ]);
-
-    if (dbError) {
-        alert("Error saving user to database: " + dbError.message);
-    } else {
-        alert("Signup successful! User saved to database.");
-    }
-}
-
-
-// Login Function
-async function login() {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    // Try to log in
+    let { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-        alert("Login failed: " + error.message);
+        if (error.message.includes("Invalid login credentials")) {
+            // If login fails, attempt to sign up the user
+            console.log("User not found. Attempting sign-up...");
+
+            const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
+
+            if (signupError) {
+                alert("Sign-up failed: " + signupError.message);
+                return;
+            }
+
+            // Get new user data
+            const user = signupData.user;
+            if (!user) {
+                alert("Error retrieving user data.");
+                return;
+            }
+
+            // Insert new user into the "users" table
+            const { error: dbError } = await supabase.from("users").insert([
+                { id: user.id, email: email }
+            ]);
+
+            if (dbError) {
+                alert("Error saving user to database: " + dbError.message);
+            } else {
+                alert("Sign-up successful! User saved to database.");
+                // Redirect to index.html
+                window.location.href = "index.html";
+            }
+
+        } else {
+            alert("Login failed: " + error.message);
+        }
     } else {
         alert("Login successful!");
+        // Redirect to index.html
+        window.location.href = "index.html";
     }
 }
 
