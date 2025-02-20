@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sleep Diary</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script> <!-- ✅ Correct -->
 </head>
 <body>
     <div class="container">
         <!-- User Info & Logout -->
         <div class="user-info">
-            <h2>Welcome, <span id="username"></span></h2>
+            <h2>Welcome, <span id="username">Loading...</span></h2>
             <button onclick="logout()">Logout</button>
         </div>
 
@@ -27,7 +27,8 @@
         <button onclick="addDay()">Add Day</button>
         <div id="diary"></div>
     </div>
-</body>
-<script src="scripts.js"></script>
-</html>
 
+    <!-- ✅ Moved scripts.js to the bottom -->
+    <script src="scripts.js"></script>
+</body>
+</html>
