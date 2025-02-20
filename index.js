@@ -44,7 +44,7 @@ async function loadUserSleepRecords(user_id) {
         .from('sleep_record')
         .select('*')
         .eq('user_id', user_id)
-        .order('night_number', { ascending: true });
+        .order('day_id', { ascending: true });
 
     if (error) {
         console.error("Error fetching sleep records:", error);
