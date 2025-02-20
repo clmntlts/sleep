@@ -5,19 +5,40 @@ const SUPABASE_URL = "https://wvdggsrxtjdlfezenbbz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2ZGdnc3J4dGpkbGZlemVuYmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNDc5NDcsImV4cCI6MjA1NTYyMzk0N30.4hJtANpuD5xx_J0Ukk6QoqTcnbV0gkjMeD2HcP5QxB8";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Sign Up Function
 async function signUp() {
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    // Sign up the user in Supabase Auth
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
-        alert("Error: " + error.message);
+        alert("Signup Error: " + error.message);
+        return;
+    }
+
+    // Get the newly created user ID
+    const user = data.user;
+    if (!user) {
+        alert("Error retrieving user data.");
+        return;
+    }
+
+    // Insert user info into the "users" table
+    const { error: dbError } = await supabase.from("users").insert([
+        {
+            id: user.id,  // Use Supabase Auth user ID
+            email: email,
+        },
+    ]);
+
+    if (dbError) {
+        alert("Error saving user to database: " + dbError.message);
     } else {
-        alert("Signup successful! Check your email for verification.");
+        alert("Signup successful! User saved to database.");
     }
 }
+
 
 // Login Function
 async function login() {
