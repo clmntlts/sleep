@@ -57,16 +57,17 @@ async function authenticateUser() {
             const { data: userData, error: fetchError } = await supabase
                 .from("users")
                 .select("*")
-                .eq("id", data.user.id)
-                .single();
+                .eq("id", data.user.id) // Ensure matching the user's id
+                .single(); // Use .single() to expect a single record
 
-            if (fetchError) {
+            // Handle error (no user found)
+            if (fetchError && fetchError.code !== 'PGRST116') {
                 console.error("Error fetching user from users table:", fetchError);
                 alert("An error occurred while fetching user data.");
                 return;
             }
 
-            // If the user doesn't exist, insert them into the 'users' table
+            // If no user data is found, insert the new user into the table
             if (!userData) {
                 const { error: insertError } = await supabase.from("users").insert([
                     { id: data.user.id, email: data.user.email },
