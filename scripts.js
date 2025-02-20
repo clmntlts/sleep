@@ -79,6 +79,11 @@ async function loadUser() {
     }
 }
 
+if (window.location.pathname === "/index.html") {
+    // Run loadUser only if the page is index.html
+    document.addEventListener("DOMContentLoaded", loadUser);
+}
+
 async function logout() {
     await supabase.auth.signOut();
     window.location.href = "auth.html";
