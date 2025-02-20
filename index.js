@@ -8,6 +8,26 @@ const SUPABASE_ANON_KEY =
 // Correctly initialize Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+async function logout() {
+    try {
+        // Sign the user out using Supabase
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+            console.error("Error logging out:", error);
+            alert("Logout failed, please try again.");
+            return;
+        }
+
+        // Redirect user after successful logout
+        alert("You have been logged out.");
+        window.location.href = "auth.html"; // Redirect to the login page
+    } catch (err) {
+        console.error("Error during logout:", err);
+        alert("An error occurred during logout.");
+    }
+}
+
 async function loadUser() {
     try {
         const { data, error } = await supabase.auth.getUser();
