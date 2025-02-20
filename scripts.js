@@ -68,6 +68,9 @@ async function loadUser() {
     document.getElementById("username").innerText = user.email;
 }
 
+// Run when page loads
+document.addEventListener("DOMContentLoaded", loadUser);
+
 // Logout Function
 async function logout() {
     await supabase.auth.signOut();
