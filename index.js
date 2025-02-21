@@ -82,11 +82,18 @@ async function loadUserSleepRecords(user_id) {
             const currentDay = record.day_count; // Ensures consistency with database field
 
             // Update the UI elements for the new day
-            document.getElementById(`bedtime${currentDay}`).style.left = `${(record.bedtime / 24) * 100}%`; // Convert time to percentage
-            document.getElementById(`wakeTime${currentDay}`).style.left = `${(record.wake_time / 24) * 100}%`; // Convert time to percentage
+
+            // Convert bedtime and wake_time (time fields) into hours
+            const bedtimeHours = convertTimeToHours(record.bedtime);
+            const wakeTimeHours = convertTimeToHours(record.wake_time);
+
+            // Update position of markers based on bedtime and wake_time
+            document.getElementById(`bedtime${currentDay}`).style.left = `${(bedtimeHours / 24) * 100}%`; // Convert time to percentage
+            document.getElementById(`wakeTime${currentDay}`).style.left = `${(wakeTimeHours / 24) * 100}%`; // Convert time to percentage
 
             // Update the time in bed display
-            document.getElementById(`timeInBed${currentDay}`).innerText = record.time_in_bed.toFixed(2); // Showing hours with 2 decimals
+            const timeInBed = (wakeTimeHours - bedtimeHours + (wakeTimeHours < bedtimeHours ? 24 : 0)); // Correct for crossing midnight
+            document.getElementById(`timeInBed${currentDay}`).innerText = timeInBed.toFixed(2); // Showing hours with 2 decimals
 
             // Update sleep quality
             document.getElementById(`sleepQuality${currentDay}`).value = record.sleep_quality;
@@ -95,6 +102,10 @@ async function loadUserSleepRecords(user_id) {
             // Update morning fatigue
             document.getElementById(`morningFatigue${currentDay}`).value = record.morning_fatigue;
             document.getElementById(`morningFatigueLabel${currentDay}`).innerText = record.morning_fatigue;
+
+            // Display bedtime and wake-up time in formatted hours
+            document.getElementById(`bedtimeTime${currentDay}`).innerText = calculateTime(bedtimeHours);
+            document.getElementById(`wakeTimeTime${currentDay}`).innerText = calculateTime(wakeTimeHours);
         });
     }
 }
@@ -175,13 +186,19 @@ function startDrag(event, markerId, dayId) {
     document.addEventListener("mouseup", stopDrag);
 }
 
+// Helper function to convert time (HH:MM:SS) into hours as a float
+function convertTimeToHours(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours + minutes / 60;
+}
+
+// Helper function to format time as hours:minutes
 function calculateTime(hour) {
     const totalMinutes = Math.round(hour * 60);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     return `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
 }
-
 function updateSleepTime(dayId) {
     const bedtime = document.getElementById(`bedtime${dayId}`);
     const wakeTime = document.getElementById(`wakeTime${dayId}`);
