@@ -88,8 +88,8 @@ async function loadUserSleepRecords(user_id) {
             const wakeTimeHours = convertTimeToHours(record.wake_time);
 
             // Update position of markers based on bedtime and wake_time
-            document.getElementById(`bedtime${currentDay}`).style.left = `${(bedtimeHours / 24) * 100}%`; // Convert time to percentage
-            document.getElementById(`wakeTime${currentDay}`).style.left = `${(wakeTimeHours / 24) * 100}%`; // Convert time to percentage
+            document.getElementById(`bedtime${currentDay}`).setAttribute("cx", `${(bedtimeHours / 24) * 100}%`);
+            document.getElementById(`wakeTime${currentDay}`).setAttribute("cx", `${(wakeTimeHours / 24) * 100}%`);
 
             // Update the time in bed display
             const timeInBed = (wakeTimeHours - bedtimeHours + (wakeTimeHours < bedtimeHours ? 24 : 0)); // Correct for crossing midnight
