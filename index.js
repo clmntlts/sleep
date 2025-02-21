@@ -132,9 +132,9 @@ function addDay() {
             </div>
             <svg width="100%" height="60" id="timeline${dayCount}">
                 <line x1="0" x2="100%" y1="30" y2="30" stroke="black" stroke-width="3"/>
-                <circle cx="0%" cy="30" r="8" fill="blue" id="bedtime${dayCount}" class="marker" 
+                <circle cx="50%" cy="30" r="8" fill="blue" id="bedtime${dayCount}" class="marker" 
                     onmousedown="startDrag(event, 'bedtime${dayCount}', ${dayCount})"/>
-                <circle cx="100%" cy="30" r="8" fill="red" id="wakeTime${dayCount}" class="marker" 
+                <circle cx="50%" cy="30" r="8" fill="red" id="wakeTime${dayCount}" class="marker" 
                     onmousedown="startDrag(event, 'wakeTime${dayCount}', ${dayCount})"/>
             </svg>
         </div>
@@ -199,6 +199,7 @@ function calculateTime(hour) {
     const minutes = totalMinutes % 60;
     return `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
 }
+
 function updateSleepTime(dayId) {
     const bedtime = document.getElementById(`bedtime${dayId}`);
     const wakeTime = document.getElementById(`wakeTime${dayId}`);
@@ -218,7 +219,12 @@ function updateSleepTime(dayId) {
     // Calculate and display formatted bedtime and wake-up time
     document.getElementById(`bedtimeTime${dayId}`).innerText = calculateTime(bedtimeHours);
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
+
+    // Update the position of markers to reflect correct times
+    document.getElementById(`bedtime${dayId}`).setAttribute("cx", `${(bedtimeHours / 24) * 100}%`);
+    document.getElementById(`wakeTime${dayId}`).setAttribute("cx", `${(wakeTimeHours / 24) * 100}%`);
 }
+
 
 // Update sleep quality for a specific day
 function updateSleepQuality(dayId) {
