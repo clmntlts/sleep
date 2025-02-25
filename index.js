@@ -126,6 +126,12 @@ function addDay() {
     dayDiv.className = "day";
     dayDiv.innerHTML = `
         <h3>Day ${dayCount}</h3>
+        <label class="switch">
+            <input type="checkbox" id="saveToggle${dayCount}" onchange="toggleSave(${dayCount})">
+            <span class="slider round"></span>
+        </label>
+        <span>Save</span>
+
         <div class="timeline-container">
             <div class="timeline-labels">
                 <span>12 PM</span><span>12 AM</span><span>12 PM</span>
@@ -236,4 +242,53 @@ function updateSleepQuality(dayId) {
 function updateMorningFatigue(dayId) {
     const fatigue = document.getElementById(`morningFatigue${dayId}`).value;
     document.getElementById(`morningFatigueLabel${dayId}`).textContent = fatigue;
+}
+
+async function toggleSave(dayId) {
+    const toggle = document.getElementById(`saveToggle${dayId}`).checked;
+    const user_id = await loadUser();
+
+    if (!user_id) return;
+
+    const bedtimeHours = parseFloat(document.getElementById(`bedtimeTime${dayId}`).innerText);
+    const wakeTimeHours = parseFloat(document.getElementById(`wakeTimeTime${dayId}`).innerText);
+    const sleep_quality = parseInt(document.getElementById(`sleepQuality${dayId}`).value);
+    const morning_fatigue = parseInt(document.getElementById(`morningFatigue${dayId}`).value);
+
+    if (toggle) {
+        // Save to Supabase
+        const { error } = await supabase
+            .from('sleep_record')
+            .upsert([
+                {
+                    user_id: user_id,
+                    day_count: dayId,
+                    bedtime: `${Math.floor(bedtimeHours)}:${(bedtimeHours % 1) * 60}`,
+                    wake_time: `${Math.floor(wakeTimeHours)}:${(wakeTimeHours % 1) * 60}`,
+                    sleep_quality: sleep_quality,
+                    morning_fatigue: morning_fatigue,
+                }
+            ]);
+
+        if (error) {
+            console.error("Error saving data:", error);
+            alert("Failed to save data.");
+        } else {
+            console.log(`Data for Day ${dayId} saved successfully.`);
+        }
+    } else {
+        // Remove from Supabase
+        const { error } = await supabase
+            .from('sleep_record')
+            .delete()
+            .eq('user_id', user_id)
+            .eq('day_count', dayId);
+
+        if (error) {
+            console.error("Error deleting data:", error);
+            alert("Failed to delete data.");
+        } else {
+            console.log(`Data for Day ${dayId} deleted.`);
+        }
+    }
 }
