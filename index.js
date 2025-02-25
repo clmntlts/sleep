@@ -246,49 +246,48 @@ function updateMorningFatigue(dayId) {
 
 async function toggleSave(dayId) {
     const toggle = document.getElementById(`saveToggle${dayId}`).checked;
-    const user_id = await loadUser();
+    const user_id = await loadUser(); // Ensure user_id is valid
 
-    if (!user_id) return;
+    if (!user_id) {
+        console.error("Error: User ID is missing!");
+        return;
+    }
 
-    const bedtimeHours = parseFloat(document.getElementById(`bedtimeTime${dayId}`).innerText);
-    const wakeTimeHours = parseFloat(document.getElementById(`wakeTimeTime${dayId}`).innerText);
+    const bedtimeText = document.getElementById(`bedtimeTime${dayId}`).innerText;
+    const wakeTimeText = document.getElementById(`wakeTimeTime${dayId}`).innerText;
+
+    // Convert time strings to hours (e.g., "22:30" → 22.5)
+    const bedtimeHours = convertTimeToHours(bedtimeText);
+    const wakeTimeHours = convertTimeToHours(wakeTimeText);
+
+    // Handle cases where wake time is past midnight
+    let timeInBed = wakeTimeHours - bedtimeHours;
+    if (timeInBed < 0) timeInBed += 24; 
+
     const sleep_quality = parseInt(document.getElementById(`sleepQuality${dayId}`).value);
     const morning_fatigue = parseInt(document.getElementById(`morningFatigue${dayId}`).value);
 
+    const sleepData = {
+        user_id: user_id,
+        day_count: dayId,
+        bedtime: bedtimeText + ":00",  // Ensure HH:MM:SS format
+        wake_time: wakeTimeText + ":00",
+        time_in_bed: timeInBed.toFixed(2), // Save as a float (e.g., 7.50 hours)
+        sleep_quality: sleep_quality,
+        morning_fatigue: morning_fatigue
+    };
+
+    console.log("Saving data:", sleepData);
+
     if (toggle) {
-        // Save to Supabase
-        const { error } = await supabase
-            .from('sleep_record')
-            .upsert([
-                {
-                    user_id: user_id,
-                    day_count: dayId,
-                    bedtime: `${Math.floor(bedtimeHours)}:${(bedtimeHours % 1) * 60}`,
-                    wake_time: `${Math.floor(wakeTimeHours)}:${(wakeTimeHours % 1) * 60}`,
-                    sleep_quality: sleep_quality,
-                    morning_fatigue: morning_fatigue,
-                }
-            ]);
+        const { error } = await supabase.from("sleep_record").upsert([sleepData]);
 
         if (error) {
             console.error("Error saving data:", error);
             alert("Failed to save data.");
         } else {
-            console.log(`Data for Day ${dayId} saved successfully.`);
-        }
-    } else {
-        // Remove from Supabase
-        const { error } = await supabase
-            .from('sleep_record')
-            .delete()
-            .eq('user_id', user_id)
-            .eq('day_count', dayId);
-
-        if (error) {
-            console.error("Error deleting data:", error);
-            alert("Failed to delete data.");
-        } else {
-            console.log(`Data for Day ${dayId} deleted.`);
+            console.log("Data saved successfully!");
+            alert("Data saved.");
         }
     }
 }
