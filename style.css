@@ -169,9 +169,8 @@ button:focus {
   font-weight: bold;
 }
 
-/* Consistent margin and padding for range inputs */
 input[type="range"] {
-  width: 100%;
+  width: 50%;
   margin: 10px 0;
 }
 
