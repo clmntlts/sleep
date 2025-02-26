@@ -341,57 +341,56 @@ async function toggleSave(dayId) {
 function addSleepPeriod(dayId) {
     const timeline = document.getElementById(`timeline${dayId}`);
     
-    let startX = null; // Track start position
-    let rect = null;
-    let eventListenerAdded = false; // Prevent duplicate listeners
+    if (!timeline) {
+        console.error("Timeline not found for day", dayId);
+        return;
+    }
+
+    let startX = null; // Track the starting position of the sleep period
+    let rect = null; // Reference to the sleep period rectangle
 
     function handleClick(event) {
         const timelineRect = timeline.getBoundingClientRect();
         let clickX = event.clientX - timelineRect.left;
-        let percentage = Math.min(Math.max(clickX / timelineRect.width, 0), 1); // Keep within bounds
-        let hours = percentage * 24; // Convert to 24-hour format
+        let percentage = Math.min(Math.max(clickX / timelineRect.width, 0), 1); // Ensure it's within bounds
+        let hours = percentage * 24; // Convert to 24-hour time format
 
         if (startX === null) {
-            // First click: Set the start of the sleep period
+            // First click: Define the start position
             startX = percentage;
+
             rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             rect.setAttribute("x", `${startX * 100}%`);
             rect.setAttribute("y", "20");
             rect.setAttribute("height", "20");
-            rect.setAttribute("width", "5%"); // Temporary small width
+            rect.setAttribute("width", "5%"); // Initial small width
             rect.setAttribute("fill", "purple");
-            rect.setAttribute("id", `sleepPeriod${dayId}_${Date.now()}`);
             rect.classList.add("sleep-period");
-            
-            // Store metadata for tracking start and end times
+
             rect.dataset.startTime = hours.toFixed(2);
-            rect.dataset.endTime = (hours + 1).toFixed(2); // Default 1-hour duration initially
+            rect.dataset.endTime = (hours + 1).toFixed(2); // Default duration of 1 hour
 
             timeline.appendChild(rect);
         } else {
-            // Second click: Set the end of the sleep period
+            // Second click: Define the end position and finalize
             let endX = percentage;
             let width = Math.abs(endX - startX) * 100;
             rect.setAttribute("width", `${width}%`);
             rect.setAttribute("x", `${Math.min(startX, endX) * 100}%`);
 
-            // Update stored metadata
             rect.dataset.startTime = (Math.min(startX, endX) * 24).toFixed(2);
             rect.dataset.endTime = (Math.max(startX, endX) * 24).toFixed(2);
 
-            // Remove click listener after defining the period
-            timeline.removeEventListener("click", handleClick);
-
-            // Make sleep period draggable and resizable
+            // Make the sleep period draggable and resizable
             makeSleepPeriodEditable(rect, dayId);
+
+            // Remove the event listener after the second click
+            timeline.removeEventListener("click", handleClick);
         }
     }
 
-    // Ensure only one event listener is added
-    if (!eventListenerAdded) {
-        timeline.addEventListener("click", handleClick);
-        eventListenerAdded = true;
-    }
+    // Add the event listener
+    timeline.addEventListener("click", handleClick);
 }
 
 
