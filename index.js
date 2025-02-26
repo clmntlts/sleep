@@ -214,21 +214,28 @@ function updateSleepTime(dayId) {
     let bedtimeX = parseFloat(bedtime.getAttribute("cx")) / 100;
     let wakeTimeX = parseFloat(wakeTime.getAttribute("cx")) / 100;
 
-    // Convert percentage to hours (0-24), but shift by 12h (lunch-to-lunch)
-    let bedtimeHours = (bedtimeX * 24 + 12) % 24; 
-    let wakeTimeHours = (wakeTimeX * 24 + 12) % 24; 
+    let bedtimeHours = bedtimeX * 24;
+    let wakeTimeHours = wakeTimeX * 24;
+
+    // Fix time mapping so first half of SVG is PM hours (12-24) instead of AM (0-12)
+    if (bedtimeHours < 12) bedtimeHours += 12;
+    else bedtimeHours -= 12;
+
+    if (wakeTimeHours < 12) wakeTimeHours += 12;
+    else wakeTimeHours -= 12;
 
     if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24; // Handle next-day wake-up
 
-    let timeInBed = (wakeTimeHours - bedtimeHours); 
+    let timeInBed = (wakeTimeHours - bedtimeHours);
     timeInBedLabel.innerText = timeInBed.toFixed(2);
 
     document.getElementById(`bedtimeTime${dayId}`).innerText = calculateTime(bedtimeHours);
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
 
-    bedtime.setAttribute("cx", `${((bedtimeHours - 12 + 24) % 24) / 24 * 100}%`);
-    wakeTime.setAttribute("cx", `${((wakeTimeHours - 12 + 24) % 24) / 24 * 100}%`);
+    bedtime.setAttribute("cx", `${((bedtimeHours % 24) / 24) * 100}%`);
+    wakeTime.setAttribute("cx", `${((wakeTimeHours % 24) / 24) * 100}%`);
 }
+
 
 
 
