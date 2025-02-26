@@ -135,7 +135,7 @@ function addDay() {
             <div class="timeline-labels">
                 <span>12 PM</span><span>12 AM</span><span>12 PM</span>
             </div>
-            <button onclick="addSleepPeriod(dayCount)">Add Sleep Period</button>
+            <button onclick="addSleepPeriod(${dayCount})">Add Sleep Period</button>
             <svg width="100%" height="60" id="timeline${dayCount}">
                 <line x1="0" x2="100%" y1="30" y2="30" stroke="black" stroke-width="3"/>
                 <circle cx="50%" cy="30" r="8" fill="blue" id="bedtime${dayCount}" class="marker" 
