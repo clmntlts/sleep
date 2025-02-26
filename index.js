@@ -337,7 +337,6 @@ async function toggleSave(dayId) {
     }
 }
 
-
 function addSleepPeriod(dayId) {
     const timeline = document.getElementById(`timeline${dayId}`);
     
@@ -353,7 +352,9 @@ function addSleepPeriod(dayId) {
         const timelineRect = timeline.getBoundingClientRect();
         let clickX = event.clientX - timelineRect.left;
         let percentage = Math.min(Math.max(clickX / timelineRect.width, 0), 1); // Ensure it's within bounds
-        let hours = percentage * 24; // Convert to 24-hour time format
+
+        // Convert percentage to 24-hour time, matching the existing scale
+        let hours = (percentage * 24 + 12) % 24;
 
         if (startX === null) {
             // First click: Define the start position
@@ -368,7 +369,7 @@ function addSleepPeriod(dayId) {
             rect.classList.add("sleep-period");
 
             rect.dataset.startTime = hours.toFixed(2);
-            rect.dataset.endTime = (hours + 1).toFixed(2); // Default duration of 1 hour
+            rect.dataset.endTime = ((hours + 1) % 24).toFixed(2); // Default duration of 1 hour
 
             timeline.appendChild(rect);
         } else {
@@ -378,8 +379,11 @@ function addSleepPeriod(dayId) {
             rect.setAttribute("width", `${width}%`);
             rect.setAttribute("x", `${Math.min(startX, endX) * 100}%`);
 
-            rect.dataset.startTime = (Math.min(startX, endX) * 24).toFixed(2);
-            rect.dataset.endTime = (Math.max(startX, endX) * 24).toFixed(2);
+            let startHour = (Math.min(startX, endX) * 24 + 12) % 24;
+            let endHour = (Math.max(startX, endX) * 24 + 12) % 24;
+
+            rect.dataset.startTime = startHour.toFixed(2);
+            rect.dataset.endTime = endHour.toFixed(2);
 
             // Make the sleep period draggable and resizable
             makeSleepPeriodEditable(rect, dayId);
@@ -392,7 +396,6 @@ function addSleepPeriod(dayId) {
     // Add the event listener
     timeline.addEventListener("click", handleClick);
 }
-
 
 function makeSleepPeriodEditable(rect, dayId) {
     let dragging = false;
@@ -424,20 +427,30 @@ function makeSleepPeriodEditable(rect, dayId) {
         let newX = event.clientX - timelineRect.left;
         let percentage = newX / timelineRect.width;
 
+        // Convert percentage to correct time scale
+        let timeHours = (percentage * 24 + 12) % 24;
+
         if (dragging) {
             let widthPercentage = parseFloat(rect.getAttribute("width"));
             let newStartX = Math.max(0, Math.min(percentage - offsetX / timelineRect.width, 1 - widthPercentage / 100));
             rect.setAttribute("x", `${newStartX * 100}%`);
+
+            rect.dataset.startTime = ((newStartX * 24 + 12) % 24).toFixed(2);
+            rect.dataset.endTime = (((newStartX * 24 + 12) + widthPercentage / 100 * 24) % 24).toFixed(2);
         } else if (resizingLeft) {
             let rectRight = parseFloat(rect.getAttribute("x")) + parseFloat(rect.getAttribute("width"));
             let newStartX = Math.max(0, Math.min(percentage, rectRight / 100));
             let newWidth = (rectRight / 100 - newStartX) * 100;
             rect.setAttribute("x", `${newStartX * 100}%`);
             rect.setAttribute("width", `${newWidth}%`);
+
+            rect.dataset.startTime = ((newStartX * 24 + 12) % 24).toFixed(2);
         } else if (resizingRight) {
             let rectStart = parseFloat(rect.getAttribute("x"));
             let newWidth = Math.max(5, (percentage * 100) - rectStart);
             rect.setAttribute("width", `${newWidth}%`);
+
+            rect.dataset.endTime = (((rectStart / 100 * 24 + 12) + newWidth / 100 * 24) % 24).toFixed(2);
         }
     });
 
@@ -447,4 +460,3 @@ function makeSleepPeriodEditable(rect, dayId) {
         resizingRight = false;
     });
 }
-
