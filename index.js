@@ -220,14 +220,23 @@ function updateSleepTime(dayId) {
 
     if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24; // Handle next-day wake-up
 
-    let timeInBed = (wakeTimeHours - bedtimeHours); 
+    let timeInBed;
+    
+    if (bedtimeHours >= 12 && wakeTimeHours >= 12) {
+        // Case 1: Both bedtime and wake time are in the PM range (12-24)
+        timeInBed = wakeTimeHours - bedtimeHours;
+    } else if (bedtimeHours < 12 && wakeTimeHours < 12) {
+        // Case 2: Both bedtime and wake time are in the AM range (00-12)
+        timeInBed = wakeTimeHours - bedtimeHours;
+    } else {
+        // Case 3: Bedtime is PM (12-24), wake time is AM (00-12) → Crosses midnight
+        timeInBed = (wakeTimeHours + 24) - bedtimeHours;
+    }    
     timeInBedLabel.innerText = timeInBed.toFixed(2);
 
     document.getElementById(`bedtimeTime${dayId}`).innerText = calculateTime(bedtimeHours);
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
 
-    bedtime.setAttribute("cx", `${((bedtimeHours - 12 + 24) % 24) / 24 * 100}%`);
-    wakeTime.setAttribute("cx", `${((wakeTimeHours - 12 + 24) % 24) / 24 * 100}%`);
 }
 
 
