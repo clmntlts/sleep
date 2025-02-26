@@ -214,27 +214,26 @@ function updateSleepTime(dayId) {
     let bedtimeX = parseFloat(bedtime.getAttribute("cx")) / 100;
     let wakeTimeX = parseFloat(wakeTime.getAttribute("cx")) / 100;
 
-    let bedtimeHours = bedtimeX * 24;
-    let wakeTimeHours = wakeTimeX * 24;
+    // Correctly map bedtime and wake time from percentage to hours
+    let bedtimeHours = (bedtimeX * 24 + 12) % 24; 
+    let wakeTimeHours = (wakeTimeX * 24 + 12) % 24; 
 
-    // Fix time mapping so first half of SVG is PM hours (12-24) instead of AM (0-12)
-    if (bedtimeHours < 12) bedtimeHours += 12;
-    else bedtimeHours -= 12;
+    // Ensure wake time is always after bedtime (handle overnight cases)
+    if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24;
 
-    if (wakeTimeHours < 12) wakeTimeHours += 12;
-    else wakeTimeHours -= 12;
-
-    if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24; // Handle next-day wake-up
-
-    let timeInBed = (wakeTimeHours - bedtimeHours);
+    // Compute time in bed
+    let timeInBed = wakeTimeHours - bedtimeHours;
     timeInBedLabel.innerText = timeInBed.toFixed(2);
 
+    // Update displayed time
     document.getElementById(`bedtimeTime${dayId}`).innerText = calculateTime(bedtimeHours);
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
 
-    bedtime.setAttribute("cx", `${((bedtimeHours % 24) / 24) * 100}%`);
-    wakeTime.setAttribute("cx", `${((wakeTimeHours % 24) / 24) * 100}%`);
+    // Correctly remap `cx` to keep the marker aligned with time
+    bedtime.setAttribute("cx", `${((bedtimeHours - 12 + 24) % 24) / 24 * 100}%`);
+    wakeTime.setAttribute("cx", `${((wakeTimeHours - 12 + 24) % 24) / 24 * 100}%`);
 }
+
 
 
 
