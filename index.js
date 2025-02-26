@@ -343,11 +343,12 @@ function addSleepPeriod(dayId) {
     
     let startX = null; // Track start position
     let rect = null;
+    let eventListenerAdded = false; // Prevent duplicate listeners
 
     function handleClick(event) {
         const timelineRect = timeline.getBoundingClientRect();
         let clickX = event.clientX - timelineRect.left;
-        let percentage = clickX / timelineRect.width; // Normalize to 0-1
+        let percentage = Math.min(Math.max(clickX / timelineRect.width, 0), 1); // Keep within bounds
         let hours = percentage * 24; // Convert to 24-hour format
 
         if (startX === null) {
@@ -361,6 +362,11 @@ function addSleepPeriod(dayId) {
             rect.setAttribute("fill", "purple");
             rect.setAttribute("id", `sleepPeriod${dayId}_${Date.now()}`);
             rect.classList.add("sleep-period");
+            
+            // Store metadata for tracking start and end times
+            rect.dataset.startTime = hours.toFixed(2);
+            rect.dataset.endTime = (hours + 1).toFixed(2); // Default 1-hour duration initially
+
             timeline.appendChild(rect);
         } else {
             // Second click: Set the end of the sleep period
@@ -369,7 +375,11 @@ function addSleepPeriod(dayId) {
             rect.setAttribute("width", `${width}%`);
             rect.setAttribute("x", `${Math.min(startX, endX) * 100}%`);
 
-            // Remove click listener after defining period
+            // Update stored metadata
+            rect.dataset.startTime = (Math.min(startX, endX) * 24).toFixed(2);
+            rect.dataset.endTime = (Math.max(startX, endX) * 24).toFixed(2);
+
+            // Remove click listener after defining the period
             timeline.removeEventListener("click", handleClick);
 
             // Make sleep period draggable and resizable
@@ -377,8 +387,13 @@ function addSleepPeriod(dayId) {
         }
     }
 
-    timeline.addEventListener("click", handleClick);
+    // Ensure only one event listener is added
+    if (!eventListenerAdded) {
+        timeline.addEventListener("click", handleClick);
+        eventListenerAdded = true;
+    }
 }
+
 
 function makeSleepPeriodEditable(rect, dayId) {
     let dragging = false;
