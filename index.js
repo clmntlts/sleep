@@ -135,6 +135,7 @@ function addDay() {
             <div class="timeline-labels">
                 <span>12 PM</span><span>12 AM</span><span>12 PM</span>
             </div>
+            <button onclick="addSleepPeriod(dayCount)">Add Sleep Period</button>
             <svg width="100%" height="60" id="timeline${dayCount}">
                 <line x1="0" x2="100%" y1="30" y2="30" stroke="black" stroke-width="3"/>
                 <circle cx="50%" cy="30" r="8" fill="blue" id="bedtime${dayCount}" class="marker" 
@@ -280,19 +281,156 @@ async function toggleSave(dayId) {
         morning_fatigue: morning_fatigue
     };
 
-    console.log("Saving data:", sleepData);
+    // Collect all sleep periods for this day
+    const sleepPeriods = document.querySelectorAll(`#timeline${dayId} .sleep-period`);
+    const periodData = [];
+
+    sleepPeriods.forEach((rect, index) => {
+        let startX = parseFloat(rect.getAttribute("x")) / 100;
+        let width = parseFloat(rect.getAttribute("width")) / 100;
+        let startTime = startX * 24; // Convert to hours
+        let endTime = (startX + width) * 24;
+        let duration = endTime - startTime;
+
+        if (duration < 0) duration += 24; // Handle midnight crossing
+
+        periodData.push({
+            user_id: user_id,
+            day_count: dayId,
+            period_id: index + 1, // Unique per day
+            start_time: calculateTime(startTime),
+            end_time: calculateTime(endTime),
+            duration: duration.toFixed(2),
+        });
+    });
+
+    console.log("Saving sleep record:", sleepData);
+    console.log("Saving sleep periods:", periodData);
 
     if (toggle) {
-        const { error } = await supabase
-    .from("sleep_record")
-    .upsert([sleepData], { onConflict: ['user_id', 'day_count'] }); 
+        // Save sleep record
+        const { error: recordError } = await supabase
+            .from("sleep_record")
+            .upsert([sleepData], { onConflict: ['user_id', 'day_count'] });
 
-        if (error) {
-            console.error("Error saving data:", error);
-            alert("Failed to save data.");
-        } else {
-            console.log("Data saved successfully!");
-            alert("Data saved.");
+        if (recordError) {
+            console.error("Error saving sleep record:", recordError);
+            alert("Failed to save sleep record.");
+            return;
         }
+
+        // Save sleep periods
+        if (periodData.length > 0) {
+            const { error: periodError } = await supabase
+                .from("sleep_periods")
+                .upsert(periodData, { onConflict: ['user_id', 'day_count', 'period_id'] });
+
+            if (periodError) {
+                console.error("Error saving sleep periods:", periodError);
+                alert("Failed to save sleep periods.");
+                return;
+            }
+        }
+
+        console.log("Data saved successfully!");
+        alert("Sleep data and periods saved.");
     }
 }
+
+
+function addSleepPeriod(dayId) {
+    const timeline = document.getElementById(`timeline${dayId}`);
+    
+    let startX = null; // Track start position
+    let rect = null;
+
+    function handleClick(event) {
+        const timelineRect = timeline.getBoundingClientRect();
+        let clickX = event.clientX - timelineRect.left;
+        let percentage = clickX / timelineRect.width; // Normalize to 0-1
+        let hours = percentage * 24; // Convert to 24-hour format
+
+        if (startX === null) {
+            // First click: Set the start of the sleep period
+            startX = percentage;
+            rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", `${startX * 100}%`);
+            rect.setAttribute("y", "20");
+            rect.setAttribute("height", "20");
+            rect.setAttribute("width", "5%"); // Temporary small width
+            rect.setAttribute("fill", "purple");
+            rect.setAttribute("id", `sleepPeriod${dayId}_${Date.now()}`);
+            rect.classList.add("sleep-period");
+            timeline.appendChild(rect);
+        } else {
+            // Second click: Set the end of the sleep period
+            let endX = percentage;
+            let width = Math.abs(endX - startX) * 100;
+            rect.setAttribute("width", `${width}%`);
+            rect.setAttribute("x", `${Math.min(startX, endX) * 100}%`);
+
+            // Remove click listener after defining period
+            timeline.removeEventListener("click", handleClick);
+
+            // Make sleep period draggable and resizable
+            makeSleepPeriodEditable(rect, dayId);
+        }
+    }
+
+    timeline.addEventListener("click", handleClick);
+}
+
+function makeSleepPeriodEditable(rect, dayId) {
+    let dragging = false;
+    let resizingLeft = false;
+    let resizingRight = false;
+    let offsetX;
+
+    rect.addEventListener("mousedown", (event) => {
+        let rectBounds = rect.getBoundingClientRect();
+        let mouseX = event.clientX;
+
+        if (Math.abs(mouseX - rectBounds.left) < 10) {
+            resizingLeft = true;
+        } else if (Math.abs(mouseX - rectBounds.right) < 10) {
+            resizingRight = true;
+        } else {
+            dragging = true;
+            offsetX = mouseX - rectBounds.left;
+        }
+
+        event.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (event) => {
+        if (!dragging && !resizingLeft && !resizingRight) return;
+
+        let timeline = document.getElementById(`timeline${dayId}`);
+        let timelineRect = timeline.getBoundingClientRect();
+        let newX = event.clientX - timelineRect.left;
+        let percentage = newX / timelineRect.width;
+
+        if (dragging) {
+            let widthPercentage = parseFloat(rect.getAttribute("width"));
+            let newStartX = Math.max(0, Math.min(percentage - offsetX / timelineRect.width, 1 - widthPercentage / 100));
+            rect.setAttribute("x", `${newStartX * 100}%`);
+        } else if (resizingLeft) {
+            let rectRight = parseFloat(rect.getAttribute("x")) + parseFloat(rect.getAttribute("width"));
+            let newStartX = Math.max(0, Math.min(percentage, rectRight / 100));
+            let newWidth = (rectRight / 100 - newStartX) * 100;
+            rect.setAttribute("x", `${newStartX * 100}%`);
+            rect.setAttribute("width", `${newWidth}%`);
+        } else if (resizingRight) {
+            let rectStart = parseFloat(rect.getAttribute("x"));
+            let newWidth = Math.max(5, (percentage * 100) - rectStart);
+            rect.setAttribute("width", `${newWidth}%`);
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        dragging = false;
+        resizingLeft = false;
+        resizingRight = false;
+    });
+}
+
