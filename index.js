@@ -214,27 +214,21 @@ function updateSleepTime(dayId) {
     let bedtimeX = parseFloat(bedtime.getAttribute("cx")) / 100;
     let wakeTimeX = parseFloat(wakeTime.getAttribute("cx")) / 100;
 
-    // Correctly map bedtime and wake time from percentage to hours
+    // Convert percentage to hours (0-24), but shift by 12h (lunch-to-lunch)
     let bedtimeHours = (bedtimeX * 24 + 12) % 24; 
     let wakeTimeHours = (wakeTimeX * 24 + 12) % 24; 
 
-    // Ensure wake time is always after bedtime (handle overnight cases)
-    if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24;
+    if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24; // Handle next-day wake-up
 
-    // Compute time in bed
-    let timeInBed = wakeTimeHours - bedtimeHours;
+    let timeInBed = (wakeTimeHours - bedtimeHours); 
     timeInBedLabel.innerText = timeInBed.toFixed(2);
 
-    // Update displayed time
     document.getElementById(`bedtimeTime${dayId}`).innerText = calculateTime(bedtimeHours);
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
 
-    // Correctly remap `cx` to keep the marker aligned with time
     bedtime.setAttribute("cx", `${((bedtimeHours - 12 + 24) % 24) / 24 * 100}%`);
     wakeTime.setAttribute("cx", `${((wakeTimeHours - 12 + 24) % 24) / 24 * 100}%`);
 }
-
-
 
 
 
