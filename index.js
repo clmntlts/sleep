@@ -129,9 +129,9 @@ function addDay() {
         <label class="switch">
             <input type="checkbox" id="saveToggle${dayCount}" onchange="toggleSave(${dayCount})">
             <span class="slider round"></span>
+            <span>Save</span>
         </label>
-        <span>Save</span>
-
+        
         <div class="timeline-container">
             <div class="timeline-labels">
                 <span>12 PM</span><span>12 AM</span><span>12 PM</span>
