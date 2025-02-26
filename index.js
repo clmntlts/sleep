@@ -192,11 +192,11 @@ function startDrag(event, markerId, dayId) {
     document.addEventListener("mouseup", stopDrag);
 }
 
-// Helper function to convert time (HH:MM:SS) into hours as a float
 function convertTimeToHours(time) {
     const [hours, minutes] = time.split(':').map(Number);
-    return hours + minutes / 60;
+    return ((hours - 12 + 24) % 24) + minutes / 60;  // Shift by 12h and keep within 24h range
 }
+
 
 // Helper function to format time as hours:minutes
 function calculateTime(hour) {
@@ -214,22 +214,22 @@ function updateSleepTime(dayId) {
     let bedtimeX = parseFloat(bedtime.getAttribute("cx")) / 100;
     let wakeTimeX = parseFloat(wakeTime.getAttribute("cx")) / 100;
 
-    let bedtimeHours = bedtimeX * 24; // Convert percentage to hours (0-24)
-    let wakeTimeHours = wakeTimeX * 24; // Convert percentage to hours (0-24)
+    // Convert percentage to hours (0-24), but shift by 12h (lunch-to-lunch)
+    let bedtimeHours = (bedtimeX * 24 + 12) % 24; 
+    let wakeTimeHours = (wakeTimeX * 24 + 12) % 24; 
 
     if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24; // Handle next-day wake-up
 
-    let timeInBed = (wakeTimeHours - bedtimeHours); // Hours in bed
-    timeInBedLabel.innerText = timeInBed.toFixed(2); // Show time in hours with 2 decimals
+    let timeInBed = (wakeTimeHours - bedtimeHours); 
+    timeInBedLabel.innerText = timeInBed.toFixed(2);
 
-    // Calculate and display formatted bedtime and wake-up time
     document.getElementById(`bedtimeTime${dayId}`).innerText = calculateTime(bedtimeHours);
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
 
-    // Update the position of markers to reflect correct times
-    document.getElementById(`bedtime${dayId}`).setAttribute("cx", `${(bedtimeHours / 24) * 100}%`);
-    document.getElementById(`wakeTime${dayId}`).setAttribute("cx", `${(wakeTimeHours / 24) * 100}%`);
+    bedtime.setAttribute("cx", `${((bedtimeHours - 12 + 24) % 24) / 24 * 100}%`);
+    wakeTime.setAttribute("cx", `${((wakeTimeHours - 12 + 24) % 24) / 24 * 100}%`);
 }
+
 
 
 // Update sleep quality for a specific day
