@@ -218,8 +218,6 @@ function updateSleepTime(dayId) {
     let bedtimeHours = (bedtimeX * 24 + 12) % 24; 
     let wakeTimeHours = (wakeTimeX * 24 + 12) % 24; 
 
-    if (wakeTimeHours < bedtimeHours) wakeTimeHours += 24; // Handle next-day wake-up
-
     let timeInBed;
     
     if (bedtimeHours >= 12 && wakeTimeHours >= 12) {
