@@ -280,7 +280,9 @@ async function toggleSave(dayId) {
     console.log("Saving data:", sleepData);
 
     if (toggle) {
-        const { error } = await supabase.from("sleep_record").upsert([sleepData]);
+        const { error } = await supabase
+    .from("sleep_record")
+    .upsert([sleepData], { onConflict: ['user_id', 'day_count'] }); 
 
         if (error) {
             console.error("Error saving data:", error);
@@ -291,3 +293,4 @@ async function toggleSave(dayId) {
         }
     }
 }
+
