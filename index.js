@@ -109,7 +109,6 @@ async function loadUserSleepRecords(user_id) {
         });
     }
 }
-
 // Ensure data is loaded when the page loads
 window.onload = async () => {
     await loadUserData();
@@ -197,7 +196,6 @@ function convertTimeToHours(time) {
     return ((hours - 12 + 24) % 24) + minutes / 60;  // Shift by 12h and keep within 24h range
 }
 
-
 // Helper function to format time as hours:minutes
 function calculateTime(hour) {
     const totalMinutes = Math.round(hour * 60);
@@ -236,8 +234,6 @@ function updateSleepTime(dayId) {
     document.getElementById(`wakeTimeTime${dayId}`).innerText = calculateTime(wakeTimeHours);
 
 }
-
-
 
 // Update sleep quality for a specific day
 function updateSleepQuality(dayId) {
@@ -300,4 +296,3 @@ async function toggleSave(dayId) {
         }
     }
 }
-
